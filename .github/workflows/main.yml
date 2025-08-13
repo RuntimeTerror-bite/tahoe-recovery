@@ -1,0 +1,36 @@
+name: Generate macOS Tahoe Recovery Image
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    env:
+      IMAGE_SIZE_MB: 10000  # <-- Adjust the image size here (in MB)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Display disk usage before image creation
+        run: df -h
+
+      - name: Install InstallAssistant.pkg
+        run: |
+          sudo installer -pkg /tmp/InstallAssistant.pkg -target /
+        shell: bash
+
+      - name: Create disk image in $HOME instead of /tmp
+        run: |
+          echo "Creating a ${IMAGE_SIZE_MB}MB HFS+ disk image named 'Tahoe'..."
+          hdiutil create -o "$HOME/Tahoe" \
+                         -size "${IMAGE_SIZE_MB}m" \
+                         -volname "Tahoe" \
+                         -layout SPUD \
+                         -fs HFS+J
+        shell: bash
+
+      - name: Display disk usage after image creation
+        run: df -h
